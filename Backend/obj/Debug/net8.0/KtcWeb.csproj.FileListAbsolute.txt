@@ -44,3 +44,12 @@ C:\Users\Pc\Desktop\KtcWeb\Backend\obj\Debug\net8.0\refint\KtcWeb.dll
 C:\Users\Pc\Desktop\KtcWeb\Backend\obj\Debug\net8.0\KtcWeb.pdb
 C:\Users\Pc\Desktop\KtcWeb\Backend\obj\Debug\net8.0\KtcWeb.genruntimeconfig.cache
 C:\Users\Pc\Desktop\KtcWeb\Backend\obj\Debug\net8.0\ref\KtcWeb.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\obj\Debug\net8.0\KtcWeb.sourcelink.json
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\Pc\Desktop\KtcWeb\Backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using KtcWeb.Services;
-using KtcWeb.Models;        // ← Ajoute ceci
+using KtcWeb.Models;
 
 namespace KtcWeb.Controllers
 {
@@ -10,12 +10,10 @@ namespace KtcWeb.Controllers
     {
         private readonly ActiveDirectoryService _adService;
 
-        // Injection de dépendance via le constructeur
         public AuthController(ActiveDirectoryService adService)
         {
             _adService = adService;
         }
-
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
@@ -29,10 +27,15 @@ namespace KtcWeb.Controllers
 
             var roles = _adService.GetRoles(request.Username, request.Password);
 
-            return Ok(new
+            // Génération du JWT Token
+            string token = _adService.GenerateJwtToken(request.Username, roles);
+
+            return Ok(new AuthResponse
             {
                 Username = request.Username,
-                Roles = roles
+                Roles = roles,
+                Token = token,
+                Expiration = DateTime.Now.AddHours(2)
             });
         }
     }

@@ -133,7 +133,10 @@ private bool IsHighlyDefaultGroup(string groupName)
             };
 
             foreach (var role in roles)
+            {
                 claims.Add(new Claim(ClaimTypes.Role, role));
+                claims.Add(new Claim("role", role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
                 _configuration["Jwt:SecretKey"] ?? "KtcWebSecretKey2026SuperLongAndSecure!@#"));

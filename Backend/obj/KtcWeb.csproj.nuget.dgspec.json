@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Pc\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj": {}
+    "C:\\Users\\KAOUTAR OKAYL\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Pc\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj": {
+    "C:\\Users\\KAOUTAR OKAYL\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Pc\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj",
+        "projectUniqueName": "C:\\Users\\KAOUTAR OKAYL\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj",
         "projectName": "KtcWeb",
-        "projectPath": "C:\\Users\\Pc\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj",
-        "packagesPath": "C:\\Users\\Pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Pc\\Desktop\\KtcWeb\\Backend\\obj\\",
+        "projectPath": "C:\\Users\\KAOUTAR OKAYL\\Desktop\\KtcWeb\\Backend\\KtcWeb.csproj",
+        "packagesPath": "C:\\Users\\KAOUTAR OKAYL\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\KAOUTAR OKAYL\\Desktop\\KtcWeb\\Backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Pc\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\KAOUTAR OKAYL\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -37,8 +37,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.100"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -50,7 +49,23 @@
             },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
-              "version": "[8.0.25, )"
+              "version": "[8.0.*, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.8, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.8, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.8, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -88,7 +103,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.106/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.419/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

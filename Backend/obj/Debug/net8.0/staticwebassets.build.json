@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"WscssbWWzFjkd27hZ0W8TNnO/hGpY9DGngonMH8WSmY=","Source":"KtcWeb","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "WYNSRAd41wSYSAOGziS6pO6ogb9yE71Cysj4jelGXMc=",
+  "Source": "KtcWeb",
+  "BasePath": "_content/KtcWeb",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

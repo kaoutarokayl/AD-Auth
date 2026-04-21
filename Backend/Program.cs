@@ -2,6 +2,8 @@ using KtcWeb.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using KtcWeb.Data;
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -20,6 +22,11 @@ builder.Services.AddCors(options =>
 
 // Injection de dépendance
 builder.Services.AddSingleton<ActiveDirectoryService>();
+// === AJOUT POUR LA BASE KTC ===
+// === CONNEXION BASE DE DONNÉES KTC ===
+builder.Services.AddDbContext<KtcDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("KtcDb")));
+
 
 // Configuration JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:SecretKey"] 
@@ -39,7 +46,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
     });
-    
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

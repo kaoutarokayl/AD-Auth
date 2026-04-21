@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KtcWeb.Data;
 using KtcWeb.Models.Atm;
+using System.Xml.Linq;
 
 namespace KtcWeb.Controllers
 {
@@ -57,16 +58,108 @@ namespace KtcWeb.Controllers
             }
         }
 
+        [HttpGet("regions/{id}")]
+        public async Task<ActionResult<RegionDetailsDto>> GetRegionById(short id)
+        {
+            try
+            {
+                var items = await _context.Database.SqlQueryRaw<RegionDetailsDto>(@"
+                    SELECT
+                        region_id AS RegionId,
+                        regionname AS RegionName,
+                        ISNULL(displayID, '') AS DisplayId,
+                        business_id AS BusinessId,
+                        region_level AS RegionLevel,
+                        parent_region_id AS ParentRegionId,
+                        CAST(additionalinfo AS nvarchar(max)) AS AdditionalInfo
+                    FROM dbo.Regions
+                    WHERE region_id = {0}", id).ToListAsync();
+
+                var region = items.FirstOrDefault();
+                if (region == null) return NotFound(new { message = "Région introuvable" });
+
+                return Ok(region);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("regions")]
         public async Task<IActionResult> CreateRegion([FromBody] CreateRegionRequest req)
         {
             try
             {
-                await _context.Database.ExecuteSqlRawAsync(
-                    "INSERT INTO dbo.Regions (regionname, displayID) VALUES ({0}, {1})",
-                    req.RegionName, req.DisplayId ?? (object)DBNull.Value);
+                var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
+
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO dbo.Regions (displayID, regionname, business_id, region_level, parent_region_id, additionalinfo)
+                    VALUES (@displayId, @regionName, @businessId, @regionLevel, @parentRegionId, CONVERT(xml, @additionalInfoXml))",
+                    new[]
+                    {
+                        new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                        new Microsoft.Data.SqlClient.SqlParameter("@regionName", req.RegionName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@regionLevel", req.RegionLevel),
+                        new Microsoft.Data.SqlClient.SqlParameter("@parentRegionId", req.ParentRegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml),
+                    });
 
                 return Ok(new { message = "Région créée avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("regions/{id}")]
+        public async Task<IActionResult> UpdateRegion(short id, [FromBody] UpdateRegionRequest req)
+        {
+            try
+            {
+                var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
+
+                var rows = await _context.Database.ExecuteSqlRawAsync(@"
+                    UPDATE dbo.Regions
+                    SET displayID = @displayId,
+                        regionname = @regionName,
+                        business_id = @businessId,
+                        region_level = @regionLevel,
+                        parent_region_id = @parentRegionId,
+                        additionalinfo = CONVERT(xml, @additionalInfoXml)
+                    WHERE region_id = @id",
+                    new[]
+                    {
+                        new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                        new Microsoft.Data.SqlClient.SqlParameter("@regionName", req.RegionName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@regionLevel", req.RegionLevel),
+                        new Microsoft.Data.SqlClient.SqlParameter("@parentRegionId", req.ParentRegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml),
+                        new Microsoft.Data.SqlClient.SqlParameter("@id", id),
+                    });
+
+                if (rows == 0) return NotFound(new { message = "Région introuvable" });
+                return Ok(new { message = "Région modifiée avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("regions/{id}")]
+        public async Task<IActionResult> DeleteRegion(short id)
+        {
+            try
+            {
+                var rows = await _context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM dbo.Regions WHERE region_id = {0}", id);
+
+                if (rows == 0) return NotFound(new { message = "Région introuvable" });
+                return Ok(new { message = "Région supprimée avec succès" });
             }
             catch (Exception ex)
             {
@@ -92,16 +185,96 @@ namespace KtcWeb.Controllers
             }
         }
 
+        [HttpGet("businesses/{id}")]
+        public async Task<ActionResult<BusinessDetailsDto>> GetBusinessById(short id)
+        {
+            try
+            {
+                var items = await _context.Database.SqlQueryRaw<BusinessDetailsDto>(@"
+                    SELECT 
+                        business_id AS BusinessId,
+                        businessname AS BusinessName,
+                        ISNULL(displayID, '') AS DisplayId,
+                        CAST(additionalinfo AS nvarchar(max)) AS AdditionalInfo
+                    FROM dbo.Businesses
+                    WHERE business_id = {0}", id).ToListAsync();
+
+                var business = items.FirstOrDefault();
+                if (business == null) return NotFound(new { message = "Business introuvable" });
+
+                return Ok(business);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("businesses")]
         public async Task<IActionResult> CreateBusiness([FromBody] CreateBusinessRequest req)
         {
             try
             {
-                await _context.Database.ExecuteSqlRawAsync(
-                    "INSERT INTO dbo.Businesses (businessname, displayID) VALUES ({0}, {1})",
-                    req.BusinessName, req.DisplayId ?? (object)DBNull.Value);
+                var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
+
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO dbo.Businesses (businessname, displayID, additionalinfo) 
+                    VALUES (@businessName, @displayId, CONVERT(xml, @additionalInfoXml))",
+                    new[]
+                    {
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessName", req.BusinessName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                        new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml)
+                    });
 
                 return Ok(new { message = "Business créée avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("businesses/{id}")]
+        public async Task<IActionResult> UpdateBusiness(short id, [FromBody] UpdateBusinessRequest req)
+        {
+            try
+            {
+                var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
+
+                var rows = await _context.Database.ExecuteSqlRawAsync(@"
+                    UPDATE dbo.Businesses
+                    SET businessname = @businessName,
+                        displayID = @displayId,
+                        additionalinfo = CONVERT(xml, @additionalInfoXml)
+                    WHERE business_id = @id",
+                    new[]
+                    {
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessName", req.BusinessName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                        new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml),
+                        new Microsoft.Data.SqlClient.SqlParameter("@id", id)
+                    });
+
+                if (rows == 0) return NotFound(new { message = "Business introuvable" });
+                return Ok(new { message = "Business modifiée avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("businesses/{id}")]
+        public async Task<IActionResult> DeleteBusiness(short id)
+        {
+            try
+            {
+                var rows = await _context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM dbo.Businesses WHERE business_id = {0}", id);
+
+                if (rows == 0) return NotFound(new { message = "Business introuvable" });
+                return Ok(new { message = "Business supprimée avec succès" });
             }
             catch (Exception ex)
             {
@@ -157,6 +330,35 @@ namespace KtcWeb.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        private static string BuildSimpleXml(string rootName, string? freeText)
+        {
+            // Si on reçoit déjà une string XML valide, on l'accepte tel quel.
+            if (!string.IsNullOrWhiteSpace(freeText))
+            {
+                var trimmed = freeText.Trim();
+                if (trimmed.StartsWith("<") && trimmed.EndsWith(">"))
+                {
+                    try
+                    {
+                        _ = XDocument.Parse(trimmed);
+                        return trimmed;
+                    }
+                    catch
+                    {
+                        // fallback: encapsulation
+                    }
+                }
+            }
+
+            var doc = new XDocument(
+                new XElement(rootName,
+                    string.IsNullOrWhiteSpace(freeText) ? null : new XElement("note", freeText.Trim())
+                )
+            );
+
+            return doc.ToString(SaveOptions.DisableFormatting);
         }
 
         private sealed class BranchFlatDto

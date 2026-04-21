@@ -1,6 +1,6 @@
 namespace KtcWeb.Models.Atm
 {
-    public class CreateRegionRequest
+    public class UpdateRegionRequest
     {
         public string RegionName { get; set; } = string.Empty;
         public string? DisplayId { get; set; }
@@ -10,3 +10,4 @@ namespace KtcWeb.Models.Atm
         public string? AdditionalInfo { get; set; }
     }
 }
+

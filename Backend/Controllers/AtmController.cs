@@ -288,43 +288,54 @@ namespace KtcWeb.Controllers
         {
             try
             {
-                var branches = await _context.Database.SqlQueryRaw<BranchFlatDto>(@"
+                var branches = await _context.Database.SqlQueryRaw<BranchDto>(@"
                     SELECT 
                         b.branch_id AS BranchId, 
                         b.branchname AS BranchName, 
                         ISNULL(b.displayID, '') AS DisplayId,
-                        ISNULL(bus.business_id, 0) AS BusinessId,
-                        ISNULL(bus.businessname, '') AS BusinessName,
-                        ISNULL(bus.displayID, '') AS BusinessDisplayId,
-                        ISNULL(r.region_id, 0) AS RegionId,
-                        ISNULL(r.regionname, '') AS RegionName,
-                        ISNULL(r.displayID, '') AS RegionDisplayId
+                        CAST(b.additionalinfo AS nvarchar(max)) AS AdditionalInfo,
+                        b.business_id AS BusinessId,
+                        b.level1_region_id AS Level1RegionId,
+                        b.level2_region_id AS Level2RegionId,
+                        b.level3_region_id AS Level3RegionId,
+                        b.level4_region_id AS Level4RegionId,
+                        b.level5_region_id AS Level5RegionId
                     FROM dbo.Branches b
-                    LEFT JOIN dbo.Businesses bus ON b.business_id = bus.business_id
-                    LEFT JOIN dbo.Regions r ON b.level1_region_id = r.region_id
-                    ORDER BY r.regionname, bus.businessname, b.branchname")
+                    ORDER BY b.branchname")
                     .ToListAsync();
 
-                var result = branches.Select(branch => new BranchDto
-                {
-                    BranchId = branch.BranchId,
-                    BranchName = branch.BranchName,
-                    DisplayId = branch.DisplayId,
-                    Business = branch.BusinessId != 0 ? new BusinessDto
-                    {
-                        BusinessId = branch.BusinessId,
-                        BusinessName = branch.BusinessName,
-                        DisplayId = branch.BusinessDisplayId
-                    } : null,
-                    Region = branch.RegionId != 0 ? new RegionDto
-                    {
-                        RegionId = branch.RegionId,
-                        RegionName = branch.RegionName,
-                        DisplayId = branch.RegionDisplayId
-                    } : null
-                }).ToList();
+                return Ok(branches);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
-                return Ok(result);
+        [HttpGet("branches/{id}")]
+        public async Task<ActionResult<BranchDto>> GetBranchById(short id)
+        {
+            try
+            {
+                var items = await _context.Database.SqlQueryRaw<BranchDto>(@"
+                    SELECT 
+                        b.branch_id AS BranchId, 
+                        b.branchname AS BranchName, 
+                        ISNULL(b.displayID, '') AS DisplayId,
+                        CAST(b.additionalinfo AS nvarchar(max)) AS AdditionalInfo,
+                        b.business_id AS BusinessId,
+                        b.level1_region_id AS Level1RegionId,
+                        b.level2_region_id AS Level2RegionId,
+                        b.level3_region_id AS Level3RegionId,
+                        b.level4_region_id AS Level4RegionId,
+                        b.level5_region_id AS Level5RegionId
+                    FROM dbo.Branches b
+                    WHERE b.branch_id = {0}", id).ToListAsync();
+
+                var branch = items.FirstOrDefault();
+                if (branch == null) return NotFound(new { message = "Branche introuvable" });
+
+                return Ok(branch);
             }
             catch (Exception ex)
             {
@@ -361,45 +372,99 @@ namespace KtcWeb.Controllers
             return doc.ToString(SaveOptions.DisableFormatting);
         }
 
-        private sealed class BranchFlatDto
-        {
-            public short BranchId { get; set; }
-            public string BranchName { get; set; } = string.Empty;
-            public string DisplayId { get; set; } = string.Empty;
-            public short BusinessId { get; set; }
-            public string BusinessName { get; set; } = string.Empty;
-            public string BusinessDisplayId { get; set; } = string.Empty;
-            public short RegionId { get; set; }
-            public string RegionName { get; set; } = string.Empty;
-            public string RegionDisplayId { get; set; } = string.Empty;
-        }
+[HttpPost("branches")]
+public async Task<IActionResult> CreateBranch([FromBody] CreateBranchRequest req)
+{
+    try
+    {
+        var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
 
-        [HttpPost("branches")]
-        public async Task<IActionResult> CreateBranch([FromBody] CreateBranchRequest req)
-        {
-            try
+        await _context.Database.ExecuteSqlRawAsync(@"
+            INSERT INTO dbo.Branches 
+                (branchname, displayID, additionalinfo, business_id, 
+                 level1_region_id, level2_region_id, level3_region_id, 
+                 level4_region_id, level5_region_id)
+            VALUES 
+                (@branchName, @displayId, CONVERT(xml, @additionalInfoXml), @businessId,
+                 @level1, @level2, @level3, @level4, @level5)",
+            new[]
             {
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    INSERT INTO dbo.Branches 
-                        (branchname, displayID, business_id, level1_region_id)
-                    VALUES 
-                        ({0}, {1}, {2}, 
-                            (SELECT TOP 1 level1_region_id 
-                             FROM dbo.Businesses 
-                             WHERE business_id = {2})
-                        )",
-                    req.BranchName,
-                    req.DisplayId ?? (object)DBNull.Value,
-                    req.BusinessId);
+                new Microsoft.Data.SqlClient.SqlParameter("@branchName", req.BranchName),
+                new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml),
+                new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level1", req.Level1RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level2", req.Level2RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level3", req.Level3RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level4", req.Level4RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level5", req.Level5RegionId)
+            });
 
-                return Ok(new { message = "Branche créée avec succès" });
-            }
-            catch (Exception ex)
+        return Ok(new { message = "Branche créée avec succès" });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = ex.Message });
+    }
+}
+
+[HttpDelete("branches/{id}")]
+public async Task<IActionResult> DeleteBranch(short id)
+{
+    try
+    {
+        var rows = await _context.Database.ExecuteSqlRawAsync(
+            "DELETE FROM dbo.Branches WHERE branch_id = {0}", id);
+
+        if (rows == 0) return NotFound(new { message = "Branche introuvable" });
+        return Ok(new { message = "Branche supprimée avec succès" });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = ex.Message });
+    }
+}
+[HttpPut("branches/{id}")]
+public async Task<IActionResult> UpdateBranch(short id, [FromBody] UpdateBranchRequest req)
+{
+    try
+    {
+        var additionalInfoXml = BuildSimpleXml("PreConfigInfo", req.AdditionalInfo);
+
+        var rows = await _context.Database.ExecuteSqlRawAsync(@"
+            UPDATE dbo.Branches
+            SET branchname          = @branchName,
+                displayID           = @displayId,
+                additionalinfo      = CONVERT(xml, @additionalInfoXml),
+                business_id         = @businessId,
+                level1_region_id    = @level1,
+                level2_region_id    = @level2,
+                level3_region_id    = @level3,
+                level4_region_id    = @level4,
+                level5_region_id    = @level5
+            WHERE branch_id = @id",
+            new[]
             {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+                new Microsoft.Data.SqlClient.SqlParameter("@branchName", req.BranchName),
+                new Microsoft.Data.SqlClient.SqlParameter("@displayId", (object?)req.DisplayId ?? DBNull.Value),
+                new Microsoft.Data.SqlClient.SqlParameter("@additionalInfoXml", additionalInfoXml),
+                new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level1", req.Level1RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level2", req.Level2RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level3", req.Level3RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level4", req.Level4RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@level5", req.Level5RegionId),
+                new Microsoft.Data.SqlClient.SqlParameter("@id", id)
+            });
 
+        if (rows == 0) return NotFound(new { message = "Branche introuvable" });
+        return Ok(new { message = "Branche modifiée avec succès" });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = ex.Message });
+    }
+}
         // ====================== CLIENT / ATM ======================
         [HttpGet("clients")]
         public async Task<ActionResult<List<ClientAtmDto>>> GetAllClients()
@@ -413,25 +478,21 @@ namespace KtcWeb.Controllers
                             c.ktcguid AS KtcGuid,
                             c.clientname AS ClientName,
                             c.networkaddress AS NetworkAddress,
-                            CAST(c.connectable AS INT) AS Connectable,
-                            c.comments AS Comments,
-
-                            b.branch_id AS BranchId,
-                            b.branchname AS BranchName,
-                            ISNULL(b.displayID, '') AS BranchDisplayId,
-
-                            bus.business_id AS BusinessId,
-                            bus.businessname AS BusinessName,
-                            ISNULL(bus.displayID, '') AS BusinessDisplayId,
-
-                            r.region_id AS RegionId,
-                            r.regionname AS RegionName,
-                            ISNULL(r.displayID, '') AS RegionDisplayId
+                            c.connectable AS Connectable,
+                            c.detailsunknown AS DetailsUnknown,
+                            c.latitude AS Latitude,
+                            c.longitude AS Longitude,
+                            c.timezone AS Timezone,
+                            CAST(c.comments AS nvarchar(max)) AS Comments,
+                            c.business_id AS BusinessId,
+                            c.branch_id AS BranchId,
+                            c.hardwaretype_id AS HardwareTypeId,
+                            ht.name AS HardwareTypeName,
+                            c.active AS Active,
+                            c.clienttype AS ClientType
                         FROM dbo.Clients c
-                        LEFT JOIN dbo.Branches b ON c.branch_id = b.branch_id
-                        LEFT JOIN dbo.Businesses bus ON b.business_id = bus.business_id
-                        LEFT JOIN dbo.Regions r ON b.level1_region_id = r.region_id
-                        ORDER BY r.regionname, bus.businessname, b.branchname, c.clientname")
+                        LEFT JOIN dbo.HardwareTypes ht ON c.hardwaretype_id = ht.hardwaretype_id
+                        ORDER BY c.clientname")
                     .ToListAsync();
 
                 return Ok(clients);
@@ -447,21 +508,235 @@ namespace KtcWeb.Controllers
         {
             try
             {
+                var commentsXml = BuildSimpleXml("comments", req.Comments);
+
                 await _context.Database.ExecuteSqlRawAsync(@"
                     INSERT INTO dbo.Clients 
-                        (clientname, networkaddress, connectable, comments, branch_id, ktcguid)
+                        (ktcguid, connectable, networkaddress, clientname, detailsunknown,
+                         latitude, longitude, timezone, comments, clienttype, gridposition,
+                         business_id, branch_id, hardwaretype_id, owner_id, deletelater, active,
+                         subnet, level1_region_id, level2_region_id, level3_region_id, level4_region_id, level5_region_id,
+                         salt, authhash, hypervisor_active, mergeto_client_id, feature_flags)
                     VALUES 
-                        (@clientName, @networkAddress, @connectable, @comments, @branchId, NEWID())",
+                        (CONVERT(nvarchar(36), NEWID()), @connectable, @networkAddress, @clientName, @detailsUnknown,
+                         @latitude, @longitude, @timezone, CONVERT(xml, @commentsXml), @clientType, @gridPosition,
+                         @businessId, @branchId, @hardwareTypeId, @ownerId, @deleteLater, @active,
+                         @subnet, @level1RegionId, @level2RegionId, @level3RegionId, @level4RegionId, @level5RegionId,
+                         @salt, @authHash, @hypervisorActive, @mergeToClientId, @featureFlags)",
                     new[]
                     {
-                        new Microsoft.Data.SqlClient.SqlParameter("@clientName", req.ClientName),
-                        new Microsoft.Data.SqlClient.SqlParameter("@networkAddress", req.NetworkAddress),
                         new Microsoft.Data.SqlClient.SqlParameter("@connectable", req.Connectable),
-                        new Microsoft.Data.SqlClient.SqlParameter("@comments", (object?)req.Comments ?? DBNull.Value),
-                        new Microsoft.Data.SqlClient.SqlParameter("@branchId", req.BranchId)
+                        new Microsoft.Data.SqlClient.SqlParameter("@networkAddress", req.NetworkAddress),
+                        new Microsoft.Data.SqlClient.SqlParameter("@clientName", req.ClientName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@detailsUnknown", req.DetailsUnknown),
+                        new Microsoft.Data.SqlClient.SqlParameter("@latitude", req.Latitude),
+                        new Microsoft.Data.SqlClient.SqlParameter("@longitude", req.Longitude),
+                        new Microsoft.Data.SqlClient.SqlParameter("@timezone", req.Timezone),
+                        new Microsoft.Data.SqlClient.SqlParameter("@commentsXml", commentsXml),
+                        new Microsoft.Data.SqlClient.SqlParameter("@clientType", req.ClientType),
+                        new Microsoft.Data.SqlClient.SqlParameter("@gridPosition", req.GridPosition),
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@branchId", req.BranchId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@hardwareTypeId", req.HardwareTypeId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@ownerId", req.OwnerId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@deleteLater", req.DeleteLater),
+                        new Microsoft.Data.SqlClient.SqlParameter("@active", req.Active),
+                        new Microsoft.Data.SqlClient.SqlParameter("@subnet", req.Subnet),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level1RegionId", req.Level1RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level2RegionId", req.Level2RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level3RegionId", req.Level3RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level4RegionId", req.Level4RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level5RegionId", req.Level5RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@salt", req.Salt),
+                        new Microsoft.Data.SqlClient.SqlParameter("@authHash", req.AuthHash),
+                        new Microsoft.Data.SqlClient.SqlParameter("@hypervisorActive", req.HypervisorActive),
+                        new Microsoft.Data.SqlClient.SqlParameter("@mergeToClientId", req.MergeToClientId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@featureFlags", req.FeatureFlags)
                     });
 
                 return Ok(new { message = "ATM créé avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("clients/{id}")]
+        public async Task<ActionResult<ClientAtmDto>> GetClientById(int id)
+        {
+            try
+            {
+                var items = await _context.Database.SqlQueryRaw<ClientAtmDto>(@"
+                    SELECT 
+                        c.client_id AS ClientId,
+                        c.ktcguid AS KtcGuid,
+                        c.clientname AS ClientName,
+                        c.networkaddress AS NetworkAddress,
+                        c.connectable AS Connectable,
+                        c.detailsunknown AS DetailsUnknown,
+                        c.latitude AS Latitude,
+                        c.longitude AS Longitude,
+                        c.timezone AS Timezone,
+                        CAST(c.comments AS nvarchar(max)) AS Comments,
+                        c.business_id AS BusinessId,
+                        c.branch_id AS BranchId,
+                        c.hardwaretype_id AS HardwareTypeId,
+                        ht.name AS HardwareTypeName,
+                        c.active AS Active,
+                        c.clienttype AS ClientType
+                    FROM dbo.Clients c
+                    LEFT JOIN dbo.HardwareTypes ht ON c.hardwaretype_id = ht.hardwaretype_id
+                    WHERE c.client_id = {0}", id).ToListAsync();
+
+                var client = items.FirstOrDefault();
+                if (client == null) return NotFound(new { message = "ATM introuvable" });
+                return Ok(client);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("clients/{id}")]
+        public async Task<IActionResult> UpdateClient(int id, [FromBody] CreateOrUpdateAtmRequest req)
+        {
+            try
+            {
+                var commentsXml = BuildSimpleXml("comments", req.Comments);
+
+                var rows = await _context.Database.ExecuteSqlRawAsync(@"
+                    UPDATE dbo.Clients
+                    SET connectable = @connectable,
+                        networkaddress = @networkAddress,
+                        clientname = @clientName,
+                        detailsunknown = @detailsUnknown,
+                        latitude = @latitude,
+                        longitude = @longitude,
+                        timezone = @timezone,
+                        comments = CONVERT(xml, @commentsXml),
+                        clienttype = @clientType,
+                        gridposition = @gridPosition,
+                        business_id = @businessId,
+                        branch_id = @branchId,
+                        hardwaretype_id = @hardwareTypeId,
+                        owner_id = @ownerId,
+                        deletelater = @deleteLater,
+                        active = @active,
+                        subnet = @subnet,
+                        level1_region_id = @level1RegionId,
+                        level2_region_id = @level2RegionId,
+                        level3_region_id = @level3RegionId,
+                        level4_region_id = @level4RegionId,
+                        level5_region_id = @level5RegionId,
+                        salt = @salt,
+                        authhash = @authHash,
+                        hypervisor_active = @hypervisorActive,
+                        mergeto_client_id = @mergeToClientId,
+                        feature_flags = @featureFlags
+                    WHERE client_id = @id",
+                    new[]
+                    {
+                        new Microsoft.Data.SqlClient.SqlParameter("@connectable", req.Connectable),
+                        new Microsoft.Data.SqlClient.SqlParameter("@networkAddress", req.NetworkAddress),
+                        new Microsoft.Data.SqlClient.SqlParameter("@clientName", req.ClientName),
+                        new Microsoft.Data.SqlClient.SqlParameter("@detailsUnknown", req.DetailsUnknown),
+                        new Microsoft.Data.SqlClient.SqlParameter("@latitude", req.Latitude),
+                        new Microsoft.Data.SqlClient.SqlParameter("@longitude", req.Longitude),
+                        new Microsoft.Data.SqlClient.SqlParameter("@timezone", req.Timezone),
+                        new Microsoft.Data.SqlClient.SqlParameter("@commentsXml", commentsXml),
+                        new Microsoft.Data.SqlClient.SqlParameter("@clientType", req.ClientType),
+                        new Microsoft.Data.SqlClient.SqlParameter("@gridPosition", req.GridPosition),
+                        new Microsoft.Data.SqlClient.SqlParameter("@businessId", req.BusinessId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@branchId", req.BranchId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@hardwareTypeId", req.HardwareTypeId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@ownerId", req.OwnerId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@deleteLater", req.DeleteLater),
+                        new Microsoft.Data.SqlClient.SqlParameter("@active", req.Active),
+                        new Microsoft.Data.SqlClient.SqlParameter("@subnet", req.Subnet),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level1RegionId", req.Level1RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level2RegionId", req.Level2RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level3RegionId", req.Level3RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level4RegionId", req.Level4RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@level5RegionId", req.Level5RegionId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@salt", req.Salt),
+                        new Microsoft.Data.SqlClient.SqlParameter("@authHash", req.AuthHash),
+                        new Microsoft.Data.SqlClient.SqlParameter("@hypervisorActive", req.HypervisorActive),
+                        new Microsoft.Data.SqlClient.SqlParameter("@mergeToClientId", req.MergeToClientId),
+                        new Microsoft.Data.SqlClient.SqlParameter("@featureFlags", req.FeatureFlags),
+                        new Microsoft.Data.SqlClient.SqlParameter("@id", id),
+                    });
+
+                if (rows == 0) return NotFound(new { message = "ATM introuvable" });
+                return Ok(new { message = "ATM modifié avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("clients/{id}")]
+        public async Task<IActionResult> DeleteClient(int id)
+        {
+            try
+            {
+                var rows = await _context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM dbo.Clients WHERE client_id = {0}", id);
+
+                if (rows == 0) return NotFound(new { message = "ATM introuvable" });
+                return Ok(new { message = "ATM supprimé avec succès" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("hardwaretypes")]
+        public async Task<ActionResult<List<HardwareTypeDto>>> GetHardwareTypes()
+        {
+            try
+            {
+                var types = await _context.Database.SqlQueryRaw<HardwareTypeDto>(@"
+                    SELECT
+                        hardwaretype_id AS HardwareTypeId,
+                        name AS Name,
+                        description AS Description,
+                        typegroup AS TypeGroup,
+                        canbeconfigured AS CanBeConfigured,
+                        canbemonitored AS CanBeMonitored
+                    FROM dbo.HardwareTypes
+                    ORDER BY name").ToListAsync();
+
+                return Ok(types);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("businesses/{businessId}/hardwaretypes")]
+        public async Task<ActionResult<List<HardwareTypeDto>>> GetHardwareTypesByBusiness(short businessId)
+        {
+            try
+            {
+                var types = await _context.Database.SqlQueryRaw<HardwareTypeDto>(@"
+                    SELECT
+                        ht.hardwaretype_id AS HardwareTypeId,
+                        ht.name AS Name,
+                        ht.description AS Description,
+                        ht.typegroup AS TypeGroup,
+                        ht.canbeconfigured AS CanBeConfigured,
+                        ht.canbemonitored AS CanBeMonitored
+                    FROM dbo.BusinessHardwareTypes bht
+                    INNER JOIN dbo.HardwareTypes ht ON ht.hardwaretype_id = bht.hardwaretype_id
+                    WHERE bht.business_id = {0}
+                    ORDER BY ht.name", businessId).ToListAsync();
+
+                return Ok(types);
             }
             catch (Exception ex)
             {

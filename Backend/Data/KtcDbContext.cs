@@ -24,9 +24,7 @@ namespace KtcWeb.Data
                         .Ignore(c => c.Branch);
 
             modelBuilder.Entity<BranchDto>()
-                        .HasNoKey()
-                        .Ignore(b => b.Business)
-                        .Ignore(b => b.Region);
+                        .HasNoKey();
 
             modelBuilder.Entity<BusinessDto>()
                         .HasNoKey();

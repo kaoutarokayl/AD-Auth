@@ -278,3 +278,4 @@ C:\Users\KAOUTAR OKAYL\Desktop\KtcWeb\Backend\obj\Debug\net8.0\KtcWeb.pdb
 C:\Users\KAOUTAR OKAYL\Desktop\KtcWeb\Backend\obj\Debug\net8.0\KtcWeb.genruntimeconfig.cache
 C:\Users\KAOUTAR OKAYL\Desktop\KtcWeb\Backend\obj\Debug\net8.0\ref\KtcWeb.dll
 C:\Users\KAOUTAR OKAYL\Desktop\KtcWeb\Backend\bin\Debug\net8.0\_tmp_business_create.json
+C:\Users\KAOUTAR OKAYL\Desktop\KtcWeb\Backend\bin\Debug\net8.0\_tmp_branch_create.json

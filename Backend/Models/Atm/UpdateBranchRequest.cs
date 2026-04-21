@@ -1,6 +1,6 @@
 namespace KtcWeb.Models.Atm
 {
-    public class CreateBranchRequest
+    public class UpdateBranchRequest
     {
         public string BranchName { get; set; } = string.Empty;     // NOT NULL
         public string? DisplayId { get; set; }                     // nullable

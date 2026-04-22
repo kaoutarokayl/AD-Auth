@@ -1,0 +1,193 @@
+﻿.group-details {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.group-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.group-header h2 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+.group-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  background-color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #495057;
+}
+
+.group-info {
+  margin-bottom: 30px;
+}
+
+.info-section {
+  margin-bottom: 15px;
+}
+
+.info-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #495057;
+}
+
+.info-section p {
+  margin: 0;
+  color: #666;
+}
+
+.info-section code {
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  display: block;
+  margin: 5px 0;
+  border: 1px solid #dee2e6;
+}
+
+.clients-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.btn-add-client {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-add-client:hover {
+  background-color: #218838;
+}
+
+.clients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.client-item {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.client-info {
+  flex: 1;
+}
+
+.client-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.client-details {
+  font-size: 14px;
+  color: #666;
+}
+
+.client-address {
+  margin-right: 10px;
+}
+
+.client-type {
+  color: #007bff;
+}
+
+.client-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.btn-remove {
+  background-color: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.btn-remove:hover {
+  background-color: #ffe5e5;
+  border-radius: 4px;
+}
+
+.empty-clients {
+  text-align: center;
+  color: #666;
+  padding: 40px 20px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+  border: 1px solid #f5c6cb;
+}

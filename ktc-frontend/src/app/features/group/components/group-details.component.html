@@ -1,0 +1,59 @@
+﻿<div class="group-details" *ngIf="groupDetails">
+  <div class="group-header">
+    <h2>{{ groupDetails.groupName }}</h2>
+    <div class="group-meta">
+      <span class="badge" *ngIf="groupDetails.groupTypeId">Type: {{ groupDetails.groupTypeId }}</span>
+      <span class="badge" *ngIf="groupDetails.evaluationInterval">Interval: {{ groupDetails.evaluationInterval }}min</span>
+    </div>
+  </div>
+
+  <div class="group-info" *ngIf="groupDetails.groupDescription || groupDetails.groupQuery">
+    <div class="info-section" *ngIf="groupDetails.groupDescription">
+      <h3>Description</h3>
+      <p>{{ groupDetails.groupDescription }}</p>
+    </div>
+    <div class="info-section" *ngIf="groupDetails.groupQuery">
+      <h3>Requête</h3>
+      <code>{{ groupDetails.groupQuery }}</code>
+    </div>
+  </div>
+
+  <div class="clients-section">
+    <div class="section-header">
+      <h3>Clients dans ce groupe ({{ groupDetails.clients?.length || 0 }})</h3>
+      <button class="btn-add-client">+ Ajouter Client</button>
+    </div>
+
+    <div class="clients-list" *ngIf="groupDetails.clients && groupDetails.clients.length > 0">
+      <div class="client-item" *ngFor="let client of groupDetails.clients">
+        <div class="client-info">
+          <div class="client-name">{{ client.clientName }}</div>
+          <div class="client-details">
+            <span class="client-address">{{ client.networkAddress }}</span>
+            <span class="client-type" *ngIf="client.hardwareTypeName">({{ client.hardwareTypeName }})</span>
+          </div>
+        </div>
+        <div class="client-status">
+          <span class="status-badge" [class.active]="client.active" [class.inactive]="!client.active">
+            {{ client.active ? 'Actif' : 'Inactif' }}
+          </span>
+          <button class="btn-remove" (click)="removeClient(client.clientId)" title="Retirer du groupe">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-clients" *ngIf="!groupDetails.clients || groupDetails.clients.length === 0">
+      <p>Aucun client dans ce groupe</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading" *ngIf="loading">
+  Chargement des détails du groupe...
+</div>
+
+<div class="error-message" *ngIf="errorMessage">
+  {{ errorMessage }}
+</div>

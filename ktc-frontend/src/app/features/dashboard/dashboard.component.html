@@ -8,7 +8,12 @@
         </svg>
         <span class="logo-text">KTC ATM Supervision</span>
       </div>
-      
+
+      <nav class="navbar-nav">
+        <a class="nav-link" routerLink="/dashboard" routerLinkActive="nav-link--active">Dashboard</a>
+        <a class="nav-link" routerLink="/atms"      routerLinkActive="nav-link--active">ATMs</a>
+      </nav>
+
       <div class="navbar-actions">
         <span class="user-info">Utilisateur Connecté</span>
         <div class="profile">
@@ -18,7 +23,9 @@
 
           <div class="profile-menu card" *ngIf="isProfileOpen()" (click)="$event.stopPropagation()">
             <div class="profile-head">
-              <div class="avatar" aria-hidden="true">U</div>
+              <div class="avatar" aria-hidden="true">
+                {{ (user().displayName || user().username || 'U')[0].toUpperCase() }}
+              </div>
               <div class="profile-meta">
                 <div class="profile-name">{{ user().displayName || user().username || 'Utilisateur' }}</div>
                 <div class="profile-sub">{{ user().email || user().username || '—' }}</div>
@@ -33,6 +40,7 @@
             </div>
           </div>
         </div>
+
         <button (click)="logout()" class="btn btn-secondary logout-btn">
           Déconnexion
         </button>
@@ -45,7 +53,7 @@
     <div class="page-head">
       <div>
         <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle">Vue d’ensemble de l’état des distributeurs et des alertes.</p>
+        <p class="page-subtitle">Vue d'ensemble de l'état des distributeurs et des alertes.</p>
       </div>
       <div class="head-actions">
         <span class="badge badge--ok">Système opérationnel</span>
@@ -56,12 +64,18 @@
       <div class="kpi card">
         <div class="kpi-label">ATMs total</div>
         <div class="kpi-value">12</div>
-        <div class="kpi-meta"><span class="badge badge--ok">UP</span> <span class="muted">11</span> <span class="badge badge--down">DOWN</span> <span class="muted">1</span></div>
+        <div class="kpi-meta">
+          <span class="badge badge--ok">UP</span> <span class="muted">11</span>
+          <span class="badge badge--down">DOWN</span> <span class="muted">1</span>
+        </div>
       </div>
       <div class="kpi card">
         <div class="kpi-label">Alertes (24h)</div>
         <div class="kpi-value">5</div>
-        <div class="kpi-meta"><span class="badge badge--warn">WARN</span> <span class="muted">4</span> <span class="badge badge--down">CRIT</span> <span class="muted">1</span></div>
+        <div class="kpi-meta">
+          <span class="badge badge--warn">WARN</span> <span class="muted">4</span>
+          <span class="badge badge--down">CRIT</span> <span class="muted">1</span>
+        </div>
       </div>
       <div class="kpi card">
         <div class="kpi-label">Sites / Branches</div>
@@ -72,12 +86,12 @@
 
     <section class="panel card card--soft">
       <div class="panel-head">
-        <h2 class="panel-title">Accès</h2>
+        <h2 class="panel-title">Accès rapide</h2>
       </div>
       <div class="panel-body">
         <div class="action-buttons">
-          <button class="btn btn-primary">Gérer les ATMs</button>
-          <button class="btn btn-secondary">Paramètres</button>
+          <button class="btn btn-primary" routerLink="/atms">Gérer les ATMs</button>
+          <button class="btn btn-secondary" routerLink="/atms/create">Nouvel ATM</button>
         </div>
       </div>
     </section>

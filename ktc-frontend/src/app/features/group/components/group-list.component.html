@@ -1,53 +1,106 @@
-﻿<div class="group-container">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>Groupes</h2>
-      <button class="btn-add">+ Nouveau Groupe</button>
-    </div>
+﻿<div class="page-wrapper">
 
-    <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
+  <!-- ── Page header ─────────────────────────────────────────────────────── -->
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Groupes</h1>
+      <p class="page-subtitle">Gestion des groupes d'ATMs</p>
     </div>
-
-    <div class="loading" *ngIf="loading">
-      Chargement des groupes...
-    </div>
-
-    <div class="group-list" *ngIf="!loading && groups.length > 0">
-      <div
-        *ngFor="let group of groups"
-        class="group-item"
-        [class.selected]="selectedGroupId === group.groupId"
-        (click)="selectGroup(group.groupId)"
-      >
-        <div class="group-info">
-          <div class="group-name">{{ group.groupName }}</div>
-          <div class="group-meta">
-            <span *ngIf="group.groupTypeId" class="badge">Type: {{ group.groupTypeId }}</span>
-          </div>
-        </div>
-        <button
-          class="btn-delete"
-          (click)="deleteGroup(group.groupId, $event)"
-          title="Supprimer ce groupe"
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-
-    <div class="empty-state" *ngIf="!loading && groups.length === 0">
-      <p>Aucun groupe trouvé</p>
+    <div class="head-actions">
+      <button class="btn btn-primary" (click)="goCreate()">
+        <span class="btn-icon">＋</span> Nouveau groupe
+      </button>
     </div>
   </div>
 
-  <div class="main-content">
-    <app-group-details
-      *ngIf="selectedGroupId"
-      [groupId]="selectedGroupId"
-    ></app-group-details>
-    <div class="placeholder" *ngIf="!selectedGroupId">
-      <p>Sélectionnez un groupe pour voir ses détails</p>
+  <!-- ── KPI strip ───────────────────────────────────────────────────────── -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <span class="kpi-value">{{ totalCount() }}</span>
+      <span class="kpi-label">Total groupes</span>
     </div>
   </div>
+
+  <!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+  <div class="toolbar card">
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Rechercher par nom, ID, description…"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="searchQuery.set($event)"
+    />
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  <div *ngIf="isLoading()" class="state-box">
+    <div class="spinner"></div>
+    <p>Chargement des groupes…</p>
+  </div>
+
+  <!-- ── Error ───────────────────────────────────────────────────────────── -->
+  <div *ngIf="error() && !isLoading()" class="error-box">
+    <span>⚠️ {{ error() }}</span>
+    <button class="btn btn-secondary btn--sm" (click)="load()">Réessayer</button>
+  </div>
+
+  <!-- ── Table ───────────────────────────────────────────────────────────── -->
+  <div *ngIf="!isLoading() && !error()" class="table-card card">
+    <div class="table-wrapper">
+      <table class="group-table">
+        <thead>
+          <tr>
+            <th (click)="sort('groupId')">#ID {{ sortIcon('groupId') }}</th>
+            <th (click)="sort('groupName')">Nom {{ sortIcon('groupName') }}</th>
+            <th (click)="sort('groupTypeId')">Type {{ sortIcon('groupTypeId') }}</th>
+            <th>Description</th>
+            <th>Intervalle</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Empty state -->
+          <tr *ngIf="filtered().length === 0">
+            <td colspan="6" class="empty-row">
+              <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <p>Aucun groupe trouvé</p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Rows -->
+          <tr *ngFor="let group of filtered()" class="group-row">
+            <td class="col-id">#{{ group.groupId }}</td>
+
+            <td class="col-name">{{ group.groupName }}</td>
+
+            <td>
+              <span class="type-badge type-{{ group.groupTypeId ?? 0 }}">
+                {{ groupTypeLabel(group.groupTypeId) }}
+              </span>
+            </td>
+
+            <td class="col-description">
+              <span *ngIf="group.groupDescription" class="desc-text" [title]="group.groupDescription">
+                {{ group.groupDescription | slice:0:60 }}{{ (group.groupDescription?.length ?? 0) > 60 ? '…' : '' }}
+              </span>
+              <span *ngIf="!group.groupDescription" class="muted">—</span>
+            </td>
+
+            <td class="col-interval">
+              <span *ngIf="group.evaluationInterval" class="interval-badge">⏱ {{ group.evaluationInterval }}min</span>
+              <span *ngIf="!group.evaluationInterval" class="muted">—</span>
+            </td>
+
+            <td class="col-actions">
+              <button class="icon-btn icon-btn--edit" title="Modifier" (click)="goEdit(group.groupId)">✏️</button>
+              <button class="icon-btn icon-btn--del"  title="Supprimer" (click)="confirmDelete(group)">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>

@@ -13,6 +13,7 @@ import {RegionListComponent } from './features/region/region-list.component';
 import { RegionFormComponent } from './features/region/region-form.component';
 import { BranchFormComponent } from './features/branch/branch-form.component';
 import { BranchListComponent } from './features/branch/branch-list.component';
+import { GroupFormComponent } from './features/group/components/group-form.component';
 
 
 export const routes: Routes = [
@@ -43,6 +44,8 @@ export const routes: Routes = [
           { path: 'branches/create',   component: BranchFormComponent },
           { path: 'branches/:id/edit', component: BranchFormComponent },
           { path: 'groups', component: GroupComponent },
+          {path: 'groups/create', component:GroupFormComponent},
+          {path: 'groups/:id/edit', component:GroupFormComponent}
 
 
         ]

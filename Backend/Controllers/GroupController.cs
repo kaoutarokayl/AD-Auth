@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using KtcWeb.Data;
 using KtcWeb.Models.Atm;
 
+#pragma warning disable CS8604 // Possible null reference argument.
+
 namespace KtcWeb.Controllers
 {
     [ApiController]
@@ -43,107 +45,187 @@ namespace KtcWeb.Controllers
             }
         }
 
-        // ====================== GET GROUP DETAILS ======================
- [HttpGet("{groupId}")]
-public async Task<ActionResult<GroupDetailsDto>> GetGroupDetails(int groupId)
-{
-    try
-    {
-        // 🔹 1. Récupérer le groupe
-        var group = await _context.Database.SqlQueryRaw<GroupDto>(@"
-            SELECT 
-                CAST(group_id AS INT) AS GroupId, 
-                groupname AS GroupName, 
-                CAST(ISNULL(grouptype_id, 0) AS INT) AS GroupTypeId,
-                groupquery AS GroupQuery, 
-                groupdescription AS GroupDescription,
-                ISNULL(include_mothballed, 0) AS IncludeMothballed, 
-                CAST(ISNULL(evaluation_interval, 0) AS INT) AS EvaluationInterval,
-                last_changed_timestamp AS LastChangedTimestamp
-            FROM [KALKTCDB].[dbo].[Groups]
-            WHERE group_id = {0}
-        ", groupId).FirstOrDefaultAsync();
-
-        if (group == null)
+        // ====================== GET GROUP CLIENTS ======================
+        [HttpGet("{groupId}/clients")]
+        public async Task<ActionResult<List<ClientSimpleDto>>> GetGroupClients(int groupId)
         {
-            return NotFound(new { error = $"Groupe {groupId} non trouvé" });
+            try
+            {
+                // 🔹 Récupérer le groupe pour connaître son type
+                var group = await _context.Database.SqlQueryRaw<GroupDto>(@"
+                    SELECT 
+                        CAST(group_id AS INT) AS GroupId, 
+                        groupname AS GroupName, 
+                        CAST(ISNULL(grouptype_id, 0) AS INT) AS GroupTypeId,
+                        groupquery AS GroupQuery, 
+                        groupdescription AS GroupDescription,
+                        ISNULL(include_mothballed, 0) AS IncludeMothballed, 
+                        CAST(ISNULL(evaluation_interval, 0) AS INT) AS EvaluationInterval,
+                        last_changed_timestamp AS LastChangedTimestamp
+                    FROM [KALKTCDB].[dbo].[Groups]
+                    WHERE group_id = {0}
+                ", groupId).FirstOrDefaultAsync();
+
+                if (group == null)
+                {
+                    return NotFound(new { error = $"Groupe {groupId} non trouvé" });
+                }
+
+                // 🔹 Récupérer les clients selon le type de groupe
+                List<ClientSimpleDto> clients;
+
+                if (group.GroupTypeId == 1)
+                {
+                    // Groupe spécial : TOUS les clients
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        WHERE c.client_id > 0
+                        ORDER BY c.clientname
+                    ").ToListAsync();
+                }
+                else if (group.GroupTypeId == 4 && !string.IsNullOrEmpty(group.GroupQuery))
+                {
+                    // Groupe dynamique : utiliser la requête stockée
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+                            ON c.client_id = cg.client_id
+                        WHERE cg.group_id = {0}
+                        ORDER BY c.clientname
+                    ", groupId).ToListAsync();
+                }
+                else
+                {
+                    // Groupe normal : clients associés explicitement
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+                            ON c.client_id = cg.client_id
+                        WHERE cg.group_id = {0}
+                        ORDER BY c.clientname
+                    ", groupId).ToListAsync();
+                }
+
+                return Ok(clients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = "❌ Erreur lors du chargement des clients", error = ex.Message });
+            }
         }
 
-        // 🔹 2. Logique de récupération des clients
-List<ClientSimpleDto> clients;
-
-// Si grouptype_id = 1 → groupe spécial, retourner TOUS les clients
-if (group.GroupTypeId == 1)
-{
-    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
-        SELECT 
-            c.client_id      AS ClientId,
-            c.clientname     AS ClientName,
-            c.networkaddress AS NetworkAddress,
-            c.active         AS Active
-        FROM [KALKTCDB].[dbo].[Clients] c
-        WHERE c.client_id > 0  -- exclure le client fictif id=0
-        ORDER BY c.clientname
-    ").ToListAsync();
-}
-// Si grouptype_id = 4 → groupe dynamique avec stored procedure
-else if (group.GroupTypeId == 4 && !string.IsNullOrEmpty(group.GroupQuery))
-{
-    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
-        SELECT 
-            c.client_id      AS ClientId,
-            c.clientname     AS ClientName,
-            c.networkaddress AS NetworkAddress,
-            c.active         AS Active
-        FROM [KALKTCDB].[dbo].[Clients] c
-        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
-            ON c.client_id = cg.client_id
-        WHERE cg.group_id = {0}
-        ORDER BY c.clientname
-    ", groupId).ToListAsync();
-}
-// Sinon → membres explicites via ClientGroups
-else
-{
-    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
-        SELECT 
-            c.client_id      AS ClientId,
-            c.clientname     AS ClientName,
-            c.networkaddress AS NetworkAddress,
-            c.active         AS Active
-        FROM [KALKTCDB].[dbo].[Clients] c
-        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
-            ON c.client_id = cg.client_id
-        WHERE cg.group_id = {0}
-        ORDER BY c.clientname
-    ", groupId).ToListAsync();
-}
-
-        // 🔹 3. Construire la réponse
-        var groupDetails = new GroupDetailsDto
+        // ====================== GET GROUP DETAILS ======================
+        [HttpGet("{groupId}")]
+        public async Task<ActionResult<GroupDetailsDto>> GetGroupDetails(int groupId)
         {
-            GroupId = group.GroupId,
-            GroupName = group.GroupName,
-            GroupTypeId = group.GroupTypeId,
-            GroupQuery = group.GroupQuery,
-            GroupDescription = group.GroupDescription,
-            IncludeMothballed = group.IncludeMothballed,
-            EvaluationInterval = group.EvaluationInterval,
-            LastChangedTimestamp = group.LastChangedTimestamp,
-            Clients = clients
-        };
+            try
+            {
+                // 🔹 1. Récupérer le groupe
+                var group = await _context.Database.SqlQueryRaw<GroupDto>(@"
+                    SELECT 
+                        CAST(group_id AS INT) AS GroupId, 
+                        groupname AS GroupName, 
+                        CAST(ISNULL(grouptype_id, 0) AS INT) AS GroupTypeId,
+                        groupquery AS GroupQuery, 
+                        groupdescription AS GroupDescription,
+                        ISNULL(include_mothballed, 0) AS IncludeMothballed, 
+                        CAST(ISNULL(evaluation_interval, 0) AS INT) AS EvaluationInterval,
+                        last_changed_timestamp AS LastChangedTimestamp
+                    FROM [KALKTCDB].[dbo].[Groups]
+                    WHERE group_id = {0}
+                ", groupId).FirstOrDefaultAsync();
 
-        return Ok(groupDetails);
-    }
-    catch (Exception ex)
-    {
-        return BadRequest(new
-        {
-            status = "❌ Erreur lors du chargement du groupe",
-            error = ex.Message
-        });
-    }
-}
+                if (group == null)
+                {
+                    return NotFound(new { error = $"Groupe {groupId} non trouvé" });
+                }
+
+                // 🔹 2. Logique de récupération des clients
+                List<ClientSimpleDto> clients;
+
+                // Si grouptype_id = 1 → groupe spécial, retourner TOUS les clients
+                if (group.GroupTypeId == 1)
+                {
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        WHERE c.client_id > 0
+                        ORDER BY c.clientname
+                    ").ToListAsync();
+                }
+                // Si grouptype_id = 4 → groupe dynamique avec requête associée
+                else if (group.GroupTypeId == 4 && !string.IsNullOrEmpty(group.GroupQuery))
+                {
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+                            ON c.client_id = cg.client_id
+                        WHERE cg.group_id = {0}
+                        ORDER BY c.clientname
+                    ", groupId).ToListAsync();
+                }
+                // Sinon → membres explicites via ClientGroups
+                else
+                {
+                    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+                        SELECT 
+                            c.client_id      AS ClientId,
+                            c.clientname     AS ClientName,
+                            c.networkaddress AS NetworkAddress,
+                            c.active         AS Active
+                        FROM [KALKTCDB].[dbo].[Clients] c
+                        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+                            ON c.client_id = cg.client_id
+                        WHERE cg.group_id = {0}
+                        ORDER BY c.clientname
+                    ", groupId).ToListAsync();
+                }
+
+                // 🔹 3. Construire la réponse
+                var groupDetails = new GroupDetailsDto
+                {
+                    GroupId = group.GroupId,
+                    GroupName = group.GroupName,
+                    GroupTypeId = group.GroupTypeId,
+                    GroupQuery = group.GroupQuery,
+                    GroupDescription = group.GroupDescription,
+                    IncludeMothballed = group.IncludeMothballed,
+                    EvaluationInterval = group.EvaluationInterval,
+                    LastChangedTimestamp = group.LastChangedTimestamp,
+                    Clients = clients
+                };
+
+                return Ok(groupDetails);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = "❌ Erreur lors du chargement du groupe", error = ex.Message });
+            }
+        }
         // ====================== CREATE GROUP ======================
         [HttpPost]
         public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request)
@@ -261,3 +343,4 @@ else
         }
     }
 }
+#pragma warning restore CS8604

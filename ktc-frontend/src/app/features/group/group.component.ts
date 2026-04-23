@@ -7,6 +7,6 @@ import { GroupListComponent } from './components/group-list.component';
   standalone: true,
   imports: [CommonModule, GroupListComponent],
   template: '<app-group-list></app-group-list>',
-  styleUrls: ['./group.component.css']
+  styles: [':host { display: flex; flex-direction: column; height: 100%; min-height: 0; }']
 })
 export class GroupComponent {}

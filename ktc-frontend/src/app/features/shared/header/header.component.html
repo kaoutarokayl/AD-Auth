@@ -8,59 +8,14 @@
   <!-- Right actions -->
   <div class="header-actions">
 
-    <!-- ══ Support dropdown ══ -->
-    <div class="support-wrapper" (click)="toggleSupport($event)">
-      <button class="support-btn" [class.active]="isSupportOpen()">
-        ⚙️ Support
-        <span class="chevron" [class.open]="isSupportOpen()">&#8964;</span>
+    <!-- Bouton Administration (Support) -->
+    <div class="support-wrapper" (click)="goToAdministration()">
+      <button class="support-btn">
+        ⚙️ Administration
       </button>
     </div>
 
-    <div class="support-dropdown" *ngIf="isSupportOpen()" (click)="$event.stopPropagation()">
-      <div class="support-title">Administration</div>
-
-      <a class="support-link" routerLink="/atms" (click)="closeSupport()">
-        <span class="support-icon">🏧</span>
-        <div>
-          <div class="support-label">ATMs</div>
-          <div class="support-desc">Gérer les distributeurs</div>
-        </div>
-      </a>
-
-      <a class="support-link disabled" title="Bientôt disponible">
-        <span class="support-icon">👥</span>
-        <div>
-          <div class="support-label">Groupes <span class="soon">Bientôt</span></div>
-          <div class="support-desc">Gérer les groupes d'ATMs</div>
-        </div>
-      </a>
-
-      <a class="support-link disabled" title="Bientôt disponible">
-        <span class="support-icon">💼</span>
-        <div>
-          <div class="support-label">Business <span class="soon">Bientôt</span></div>
-          <div class="support-desc">Gérer les entreprises</div>
-        </div>
-      </a>
-
-      <a class="support-link disabled" title="Bientôt disponible">
-        <span class="support-icon">🌍</span>
-        <div>
-          <div class="support-label">Régions <span class="soon">Bientôt</span></div>
-          <div class="support-desc">Gérer les régions</div>
-        </div>
-      </a>
-
-      <a class="support-link disabled" title="Bientôt disponible">
-        <span class="support-icon">🏢</span>
-        <div>
-          <div class="support-label">Branches <span class="soon">Bientôt</span></div>
-          <div class="support-desc">Gérer les branches</div>
-        </div>
-      </a>
-    </div>
-
-    <!-- ══ Profile dropdown ══ -->
+    <!-- Profile dropdown (inchangé) -->
     <div class="profile-wrapper" (click)="toggleProfile($event)">
       <div class="avatar" [title]="user()?.username || 'Utilisateur'">
         {{ userInitial() }}

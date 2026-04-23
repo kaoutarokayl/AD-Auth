@@ -1,6 +1,6 @@
 import { Component, HostListener, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -12,12 +12,12 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class HeaderComponent {
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   roles = this.authService.currentUserRoles;
   user  = this.authService.currentUser;
 
   isProfileOpen = signal(false);
-  isSupportOpen = signal(false);
 
   userInitial = computed(() => {
     const name = this.user()?.username || '?';
@@ -32,27 +32,21 @@ export class HeaderComponent {
 
   toggleProfile(event?: Event) {
     event?.stopPropagation();
-    this.isSupportOpen.set(false); // ferme l'autre
     this.isProfileOpen.update(v => !v);
-  }
-
-  toggleSupport(event?: Event) {
-    event?.stopPropagation();
-    this.isProfileOpen.set(false); // ferme l'autre
-    this.isSupportOpen.update(v => !v);
-  }
-
-  closeSupport() {
-    this.isSupportOpen.set(false);
   }
 
   @HostListener('document:click')
   onDocumentClick() {
     this.isProfileOpen.set(false);
-    this.isSupportOpen.set(false);
   }
 
   logout() {
     this.authService.logout();
+  }
+
+  // Nouvelle méthode : clic sur Administration → va sur la liste des ATMs
+  goToAdministration() {
+    this.isProfileOpen.set(false);
+    this.router.navigate(['/admin/atms']);
   }
 }

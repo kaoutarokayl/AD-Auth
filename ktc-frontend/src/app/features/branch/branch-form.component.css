@@ -1,6 +1,4 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
 /* ── Layout ─────────────────────────────────────────────────────────────── */
 .page-wrapper {
@@ -30,34 +28,16 @@
   padding: 0;
   margin-bottom: 6px;
 }
-.back-btn:hover {
-  text-decoration: underline;
-}
+.back-btn:hover { text-decoration: underline; }
 
-.page-title {
-  font-size: 24px;
-  font-weight: 900;
-  margin: 0;
-  color: var(--text);
-}
-
-.page-subtitle {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 4px;
-}
+.page-title { font-size: 24px; font-weight: 900; margin: 0; color: var(--text); }
+.page-subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
 /* ── Form ───────────────────────────────────────────────────────────────── */
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+.form-grid { display: flex; flex-direction: column; gap: 14px; }
 
 /* ── Sections ───────────────────────────────────────────────────────────── */
-.form-section {
-  padding: 20px;
-}
+.form-section { padding: 20px; }
 
 .card {
   background: var(--surface);
@@ -77,6 +57,13 @@
   border-bottom: 1px solid var(--border);
 }
 
+.section-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: -10px;
+  margin-bottom: 14px;
+}
+
 /* ── Fields ─────────────────────────────────────────────────────────────── */
 .fields-row {
   display: grid;
@@ -84,21 +71,11 @@
   gap: 14px;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
+.field { display: flex; flex-direction: column; gap: 5px; }
 
-.field-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-}
+.field-label { font-size: 13px; font-weight: 700; color: var(--text); }
 
-.req {
-  color: var(--danger-500);
-}
+.req { color: var(--danger-500); }
 
 /* ── Inputs ─────────────────────────────────────────────────────────────── */
 .field input,
@@ -114,6 +91,7 @@ textarea {
   font-family: inherit;
   outline: none;
   transition: border-color 120ms, box-shadow 120ms;
+  box-sizing: border-box;
 }
 
 .field input:focus,
@@ -123,17 +101,10 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(79,70,229,.12);
 }
 
-textarea {
-  resize: vertical;
-  min-height: 90px;
-}
+textarea { resize: vertical; min-height: 90px; }
 
 /* ── Validation ─────────────────────────────────────────────────────────── */
-.field-error {
-  color: var(--danger-500);
-  font-size: 11px;
-  font-weight: 600;
-}
+.field-error { color: var(--danger-500); font-size: 11px; font-weight: 600; }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 .form-actions {
@@ -153,22 +124,12 @@ textarea {
   transition: all 120ms;
 }
 
-.btn-primary {
-  background: var(--brand-500);
-  color: white;
-}
-.btn-primary:hover {
-  background: var(--brand-600);
-}
+.btn-primary { background: var(--brand-500); color: white; }
+.btn-primary:hover { background: var(--brand-600); }
+.btn-primary:disabled { opacity: .6; cursor: not-allowed; }
 
-.btn-secondary {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-.btn-secondary:hover {
-  background: var(--surface-2);
-}
+.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-secondary:hover { background: var(--surface-2); }
 
 /* ── Alerts ─────────────────────────────────────────────────────────────── */
 .alert {
@@ -202,35 +163,19 @@ textarea {
 }
 
 .spinner {
-  width: 34px;
-  height: 34px;
+  width: 34px; height: 34px;
   border: 3px solid var(--border);
   border-top-color: var(--brand-500);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .page-wrapper {
-    padding: 1rem;
-  }
-
-  .fields-row {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .btn {
-    width: 100%;
-  }
+  .page-wrapper { padding: 1rem; }
+  .fields-row { grid-template-columns: 1fr; }
+  .form-actions { flex-direction: column; }
+  .form-actions .btn { width: 100%; }
 }

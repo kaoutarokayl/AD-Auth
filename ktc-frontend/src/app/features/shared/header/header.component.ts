@@ -45,8 +45,8 @@ export class HeaderComponent {
   }
 
   // Nouvelle méthode : clic sur Administration → va sur la liste des ATMs
-  goToAdministration() {
-    this.isProfileOpen.set(false);
-    this.router.navigate(['/admin/atms']);
-  }
+goToAdministration() {
+  this.isProfileOpen.set(false);
+  this.router.navigate(['/admin']);   // Va sur le layout admin (qui redirige vers /admin/atms)
+}
 }

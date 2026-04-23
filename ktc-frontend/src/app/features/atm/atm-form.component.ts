@@ -156,8 +156,7 @@ export class AtmFormComponent implements OnInit {
       next: (res) => {
         this.isSaving.set(false);
         this.successMsg.set(res.message);
-        setTimeout(() => this.router.navigate(['/atms']), 1000);
-      },
+setTimeout(() => this.router.navigate(['/admin/atms']), 1000);      },
       error: (err) => {
         this.isSaving.set(false);
         this.error.set(err?.error?.message ?? 'Erreur lors de l\'enregistrement');
@@ -165,7 +164,7 @@ export class AtmFormComponent implements OnInit {
     });
   }
 
-  cancel(): void {
-    this.router.navigate(['/atms']);
-  }
+cancel(): void {
+  this.router.navigate(['/admin/atms']);
+}
 }

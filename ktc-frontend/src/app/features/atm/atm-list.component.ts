@@ -76,18 +76,17 @@ export class AtmListComponent implements OnInit {
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
-  goCreate(): void {
-    this.router.navigate(['/atms/create']);
-  }
+ goCreate(): void {
+  this.router.navigate(['/admin/atms/create']);
+}
 
-  goEdit(id: number): void {
-    this.router.navigate(['/atms', id, 'edit']);
-  }
+goEdit(id: number): void {
+  this.router.navigate(['/admin/atms', id, 'edit']);
+}
 
-  goMap(): void {
-    this.router.navigate(['/atms/map']);
-  }
-
+goMap(): void {
+  this.router.navigate(['/admin/atms/map']);
+}
   confirmDelete(atm: ClientAtm): void {
     if (!confirm(`Supprimer l'ATM "${atm.clientName}" (#${atm.clientId}) ?`)) return;
     this.atmService.deleteClient(atm.clientId).subscribe({

@@ -42,11 +42,13 @@ export const routes: Routes = [
           { path: 'branches', component: BranchListComponent },
           { path: 'branches/create',   component: BranchFormComponent },
           { path: 'branches/:id/edit', component: BranchFormComponent },
+          { path: 'groups', component: GroupComponent },
+
 
         ]
       },
 
-      { path: 'groups', component: GroupComponent },
+      
     ]
   },
 

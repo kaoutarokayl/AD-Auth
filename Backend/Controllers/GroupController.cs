@@ -69,19 +69,55 @@ public async Task<ActionResult<GroupDetailsDto>> GetGroupDetails(int groupId)
             return NotFound(new { error = $"Groupe {groupId} non trouvé" });
         }
 
-        // 🔹 2. Récupérer les clients (DTO simplifié)
-        var clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
-            SELECT 
-                c.client_id AS ClientId,
-                c.clientname AS ClientName,
-                c.networkaddress AS NetworkAddress,
-                c.active AS Active
-            FROM [KALKTCDB].[dbo].[Clients] c
-            INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
-                ON c.client_id = cg.client_id
-            WHERE cg.group_id = {0}
-            ORDER BY c.clientname
-        ", groupId).ToListAsync();
+        // 🔹 2. Logique de récupération des clients
+List<ClientSimpleDto> clients;
+
+// Si grouptype_id = 1 → groupe spécial, retourner TOUS les clients
+if (group.GroupTypeId == 1)
+{
+    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+        SELECT 
+            c.client_id      AS ClientId,
+            c.clientname     AS ClientName,
+            c.networkaddress AS NetworkAddress,
+            c.active         AS Active
+        FROM [KALKTCDB].[dbo].[Clients] c
+        WHERE c.client_id > 0  -- exclure le client fictif id=0
+        ORDER BY c.clientname
+    ").ToListAsync();
+}
+// Si grouptype_id = 4 → groupe dynamique avec stored procedure
+else if (group.GroupTypeId == 4 && !string.IsNullOrEmpty(group.GroupQuery))
+{
+    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+        SELECT 
+            c.client_id      AS ClientId,
+            c.clientname     AS ClientName,
+            c.networkaddress AS NetworkAddress,
+            c.active         AS Active
+        FROM [KALKTCDB].[dbo].[Clients] c
+        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+            ON c.client_id = cg.client_id
+        WHERE cg.group_id = {0}
+        ORDER BY c.clientname
+    ", groupId).ToListAsync();
+}
+// Sinon → membres explicites via ClientGroups
+else
+{
+    clients = await _context.Database.SqlQueryRaw<ClientSimpleDto>(@"
+        SELECT 
+            c.client_id      AS ClientId,
+            c.clientname     AS ClientName,
+            c.networkaddress AS NetworkAddress,
+            c.active         AS Active
+        FROM [KALKTCDB].[dbo].[Clients] c
+        INNER JOIN [KALKTCDB].[dbo].[ClientGroups] cg 
+            ON c.client_id = cg.client_id
+        WHERE cg.group_id = {0}
+        ORDER BY c.clientname
+    ", groupId).ToListAsync();
+}
 
         // 🔹 3. Construire la réponse
         var groupDetails = new GroupDetailsDto

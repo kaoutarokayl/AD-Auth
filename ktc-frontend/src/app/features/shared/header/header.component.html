@@ -1,0 +1,97 @@
+<header class="app-header">
+  <!-- Brand -->
+  <div class="header-brand">
+    <div class="brand-mark" aria-hidden="true">K</div>
+    <span class="brand-name">KTC Web</span>
+  </div>
+
+  <!-- Right actions -->
+  <div class="header-actions">
+
+    <!-- ══ Support dropdown ══ -->
+    <div class="support-wrapper" (click)="toggleSupport($event)">
+      <button class="support-btn" [class.active]="isSupportOpen()">
+        ⚙️ Support
+        <span class="chevron" [class.open]="isSupportOpen()">&#8964;</span>
+      </button>
+    </div>
+
+    <div class="support-dropdown" *ngIf="isSupportOpen()" (click)="$event.stopPropagation()">
+      <div class="support-title">Administration</div>
+
+      <a class="support-link" routerLink="/atms" (click)="closeSupport()">
+        <span class="support-icon">🏧</span>
+        <div>
+          <div class="support-label">ATMs</div>
+          <div class="support-desc">Gérer les distributeurs</div>
+        </div>
+      </a>
+
+      <a class="support-link disabled" title="Bientôt disponible">
+        <span class="support-icon">👥</span>
+        <div>
+          <div class="support-label">Groupes <span class="soon">Bientôt</span></div>
+          <div class="support-desc">Gérer les groupes d'ATMs</div>
+        </div>
+      </a>
+
+      <a class="support-link disabled" title="Bientôt disponible">
+        <span class="support-icon">💼</span>
+        <div>
+          <div class="support-label">Business <span class="soon">Bientôt</span></div>
+          <div class="support-desc">Gérer les entreprises</div>
+        </div>
+      </a>
+
+      <a class="support-link disabled" title="Bientôt disponible">
+        <span class="support-icon">🌍</span>
+        <div>
+          <div class="support-label">Régions <span class="soon">Bientôt</span></div>
+          <div class="support-desc">Gérer les régions</div>
+        </div>
+      </a>
+
+      <a class="support-link disabled" title="Bientôt disponible">
+        <span class="support-icon">🏢</span>
+        <div>
+          <div class="support-label">Branches <span class="soon">Bientôt</span></div>
+          <div class="support-desc">Gérer les branches</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- ══ Profile dropdown ══ -->
+    <div class="profile-wrapper" (click)="toggleProfile($event)">
+      <div class="avatar" [title]="user()?.username || 'Utilisateur'">
+        {{ userInitial() }}
+      </div>
+      <div class="profile-info">
+        <span class="profile-name">{{ user()?.username || '—' }}</span>
+        <span class="profile-role">{{ primaryRole() }}</span>
+      </div>
+      <span class="chevron" [class.open]="isProfileOpen()">&#8964;</span>
+    </div>
+
+    <div class="profile-dropdown" *ngIf="isProfileOpen()" (click)="$event.stopPropagation()">
+      <div class="dropdown-header">
+        <div class="dropdown-avatar">{{ userInitial() }}</div>
+        <div>
+          <div class="dropdown-name">{{ user()?.username || '—' }}</div>
+          <div class="dropdown-email">{{ user()?.email || '' }}</div>
+        </div>
+      </div>
+      <div class="dropdown-roles" *ngIf="roles()?.length">
+        <span class="roles-label">Rôles</span>
+        <div class="roles-list">
+          <span class="role-badge" *ngFor="let role of roles()">{{ role }}</span>
+        </div>
+      </div>
+      <div class="dropdown-divider"></div>
+      <button class="logout-btn" (click)="logout()">
+        <span class="logout-icon">⎋</span>
+        Déconnexion
+      </button>
+    </div>
+
+  </div>
+</header>

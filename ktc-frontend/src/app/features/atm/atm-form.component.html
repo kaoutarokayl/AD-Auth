@@ -17,9 +17,9 @@
       <p>Chargement…</p>
     </div>
   
-    <!-- ── Error ───────────────────────────────────────────────────────────── -->
+    <!-- ── Error / Success ─────────────────────────────────────────────────── -->
     <div *ngIf="error() && !isLoading()" class="alert alert--error">⚠️ {{ error() }}</div>
-    <div *ngIf="successMsg()"           class="alert alert--ok">✅ {{ successMsg() }}</div>
+    <div *ngIf="successMsg()"            class="alert alert--ok">✅ {{ successMsg() }}</div>
   
     <!-- ── Form ────────────────────────────────────────────────────────────── -->
     <form
@@ -83,11 +83,12 @@
         </div>
       </div>
   
-      <!-- ═══ Section : Localisation ══════════════════════════════════════════ -->
+      <!-- ═══ Section : Localisation GPS ══════════════════════════════════════ -->
       <div class="form-section card">
         <h2 class="section-title">Localisation GPS</h2>
-        <div class="fields-row">
-  
+
+        <!-- Coords fields + pick button -->
+        <div class="gps-row">
           <div class="field">
             <label class="field-label" for="latitude">Latitude <span class="req">*</span></label>
             <input id="latitude" type="number" step="0.000001" formControlName="latitude" placeholder="ex: 33.5731" />
@@ -95,7 +96,7 @@
               Entre -90 et 90
             </small>
           </div>
-  
+
           <div class="field">
             <label class="field-label" for="longitude">Longitude <span class="req">*</span></label>
             <input id="longitude" type="number" step="0.000001" formControlName="longitude" placeholder="ex: -7.5898" />
@@ -103,7 +104,27 @@
               Entre -180 et 180
             </small>
           </div>
-  
+
+          <!-- Map picker button -->
+          <div class="field field--pick-btn">
+            <label class="field-label">&nbsp;</label>
+            <button type="button" class="btn btn-map-pick" (click)="openMapPicker()">
+              📍 Choisir sur la carte
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview strip (shown when coords are non-zero) -->
+        <div class="coords-preview" *ngIf="hasCoords()">
+          <span class="coords-badge">
+            📌 {{ form.value.latitude | number:'1.5-5' }},  {{ form.value.longitude | number:'1.5-5' }}
+          </span>
+          <a
+            class="coords-link"
+            [href]="googleMapsUrl()"
+            target="_blank"
+            rel="noopener"
+          >Voir sur Google Maps ↗</a>
         </div>
       </div>
   
@@ -160,3 +181,60 @@
   
     </form>
   </div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MAP PICKER MODAL
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="mapPickerOpen()" (click)="closeMapPicker()"></div>
+
+<div class="modal-panel" *ngIf="mapPickerOpen()">
+
+  <!-- Modal header -->
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">📍 Choisir l'emplacement</h2>
+      <p class="modal-sub">Cliquez sur la carte pour placer le marqueur</p>
+    </div>
+    <button class="modal-close" (click)="closeMapPicker()">✕</button>
+  </div>
+
+  <!-- Search bar inside modal -->
+  <div class="modal-search">
+    <input
+      #searchInput
+      class="modal-search-input"
+      type="text"
+      placeholder="🔍  Rechercher une adresse ou ville…"
+      (keydown.enter)="geocodeAddress(searchInput.value)"
+    />
+    <button class="btn-geocode" (click)="geocodeAddress(searchInput.value)">Rechercher</button>
+  </div>
+
+  <!-- Map -->
+  <div id="picker-map" class="picker-map"></div>
+
+  <!-- Current picked coords -->
+  <div class="modal-coords">
+    <span *ngIf="pickedLat() !== null; else noCoords">
+      📌 <strong>{{ pickedLat() | number:'1.5-5' }}</strong>,
+         <strong>{{ pickedLng() | number:'1.5-5' }}</strong>
+    </span>
+    <ng-template #noCoords>
+      <span class="modal-coords-hint">Aucune position sélectionnée</span>
+    </ng-template>
+  </div>
+
+  <!-- Modal footer -->
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="closeMapPicker()">Annuler</button>
+    <button
+      class="btn btn-primary"
+      [disabled]="pickedLat() === null"
+      (click)="confirmMapPick()"
+    >
+      ✅ Confirmer la position
+    </button>
+  </div>
+
+</div>

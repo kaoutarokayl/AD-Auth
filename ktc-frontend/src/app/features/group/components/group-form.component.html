@@ -1,13 +1,14 @@
-<div class="page-wrapper">
+<div class="form-panel">
 
   <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <div class="page-head">
+  <div class="form-head">
     <div>
-      <h1 class="page-title">{{ isEdit() ? 'Modifier le groupe' : 'Nouveau groupe' }}</h1>
-      <p class="page-subtitle">
-        {{ isEdit() ? 'Mise à jour : ' + group()?.groupName : 'Créer un nouveau groupe d\'ATMs' }}
+      <h2 class="form-title">{{ isEdit ? 'Modifier le groupe' : 'Nouveau groupe' }}</h2>
+      <p class="form-subtitle">
+        {{ isEdit ? 'Mise à jour : ' + group?.groupName : 'Créer un nouveau groupe d\'ATMs' }}
       </p>
     </div>
+    <button class="close-btn" (click)="cancel()" title="Fermer">✕</button>
   </div>
 
   <!-- ── Alerts ──────────────────────────────────────────────────────────── -->
@@ -84,7 +85,7 @@
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
       <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Enregistrement…' : (isEdit() ? 'Mettre à jour' : 'Créer le groupe') }}
+        {{ isSaving() ? 'Enregistrement…' : (isEdit ? 'Mettre à jour' : 'Créer le groupe') }}
       </button>
     </div>
 

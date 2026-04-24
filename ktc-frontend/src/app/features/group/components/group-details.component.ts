@@ -23,12 +23,14 @@ export class GroupDetailsComponent implements OnInit, OnChanges {
   isLoading     = signal(false);
   error         = signal<string | null>(null);
 
-  // Ajout client
-  showAddModal   = signal(false);
-  allAtms        = signal<ClientAtm[]>([]);
-  loadingAtms    = signal(false);
-  addSearch      = signal('');
-  addingClientId = signal<number | null>(null);
+  // Ajout client(s)
+  showAddModal      = signal(false);
+  allAtms           = signal<ClientAtm[]>([]);
+  loadingAtms       = signal(false);
+  addSearch         = signal('');
+  addingClientId    = signal<number | null>(null);
+  selectedClientIds = signal<Set<number>>(new Set()); // Multi-sélection
+  isAddingBulk      = signal(false);
 
   // ── Computed ───────────────────────────────────────────────────────────────
   memberIds = computed(() =>
@@ -97,7 +99,10 @@ export class GroupDetailsComponent implements OnInit, OnChanges {
     }
   }
 
-  closeAddModal(): void { this.showAddModal.set(false); }
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.selectedClientIds.set(new Set());
+  }
 
   addClient(clientId: number): void {
     this.addingClientId.set(clientId);
@@ -116,6 +121,63 @@ export class GroupDetailsComponent implements OnInit, OnChanges {
         this.addingClientId.set(null);
         alert(err?.error?.message ?? 'Erreur lors de l\'ajout');
       }
+    });
+  }
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  toggleSelection(clientId: number): void {
+    this.selectedClientIds.update(selected => {
+      const newSelected = new Set(selected);
+      if (newSelected.has(clientId)) {
+        newSelected.delete(clientId);
+      } else {
+        newSelected.add(clientId);
+      }
+      return newSelected;
+    });
+  }
+
+  isSelected(clientId: number): boolean {
+    return this.selectedClientIds().has(clientId);
+  }
+
+  // ── Bulk add ───────────────────────────────────────────────────────────────
+  addSelectedClients(): void {
+    const ids = Array.from(this.selectedClientIds());
+    if (ids.length === 0) return;
+
+    this.isAddingBulk.set(true);
+    let completed = 0;
+    const errors: string[] = [];
+
+    ids.forEach(clientId => {
+      this.groupService.addClientToGroup(this.groupId, clientId).subscribe({
+        next: () => {
+          const atm = this.allAtms().find(a => a.clientId === clientId);
+          if (atm) {
+            this.groupDetails.update(gd => gd ? {
+              ...gd,
+              clients: [...(gd.clients ?? []), atm as any]
+            } : gd);
+          }
+          completed++;
+          if (completed === ids.length) {
+            this.isAddingBulk.set(false);
+            this.selectedClientIds.set(new Set());
+            this.closeAddModal();
+          }
+        },
+        error: err => {
+          errors.push(`${clientId}: ${err?.error?.message ?? 'Erreur'}`);
+          completed++;
+          if (completed === ids.length) {
+            this.isAddingBulk.set(false);
+            if (errors.length > 0) {
+              alert(`Erreurs lors de l'ajout:\n${errors.join('\n')}`);
+            }
+          }
+        }
+      });
     });
   }
 

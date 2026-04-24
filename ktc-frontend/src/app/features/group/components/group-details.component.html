@@ -130,6 +130,12 @@
       </div>
 
       <div *ngFor="let atm of availableAtms()" class="atm-row">
+        <input
+          type="checkbox"
+          class="atm-checkbox"
+          [checked]="isSelected(atm.clientId)"
+          (change)="toggleSelection(atm.clientId)"
+        />
         <div class="client-status-dot"
           [class.dot--ok]="atm.active"
           [class.dot--down]="!atm.active">
@@ -140,18 +146,27 @@
             <code class="client-ip">{{ atm.networkAddress }}</code>
           </div>
         </div>
-        <button
-          class="btn btn-add-atm"
-          (click)="addClient(atm.clientId)"
-          [disabled]="addingClientId() === atm.clientId"
-        >
-          {{ addingClientId() === atm.clientId ? '…' : '＋' }}
-        </button>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeAddModal()">Fermer</button>
+      <div class="selection-count" *ngIf="selectedClientIds().size > 0">
+        {{ selectedClientIds().size }} sélectionné{{ selectedClientIds().size > 1 ? 's' : '' }}
+      </div>
+      <button
+        class="btn btn-secondary"
+        (click)="closeAddModal()"
+        [disabled]="isAddingBulk()"
+      >
+        Fermer
+      </button>
+      <button
+        class="btn btn-success"
+        (click)="addSelectedClients()"
+        [disabled]="selectedClientIds().size === 0 || isAddingBulk()"
+      >
+        {{ isAddingBulk() ? '…' : '＋ Ajouter (' + selectedClientIds().size + ')' }}
+      </button>
     </div>
   </div>
 </div>

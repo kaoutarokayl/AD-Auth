@@ -44,19 +44,18 @@ interface BranchNode {
 })
 export class SidebarComponent implements OnInit {
 
-  // ✅ Port corrigé
   private apiBase = 'http://localhost:5239/api';
 
   activeTab = signal<'groups' | 'hierarchy'>('groups');
 
-  // Groups tab
+  // GROUPS
   groups         = signal<GroupDto[]>([]);
   expandedGroups = signal<Set<number>>(new Set());
   groupClients   = signal<Map<number, ClientSimpleDto[]>>(new Map());
   loadingGroups  = signal(false);
   loadingGroupId = signal<number | null>(null);
 
-  // Hierarchy tab
+  // HIERARCHY
   businesses         = signal<BusinessNode[]>([]);
   expandedBusinesses = signal<Set<number>>(new Set());
   expandedBranches   = signal<Set<number>>(new Set());
@@ -75,9 +74,10 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  // ── Groups ───────────────────────────────────────────────────────────────
+  // ───────── GROUPS ─────────
   loadGroups() {
     this.loadingGroups.set(true);
+
     this.http.get<GroupDto[]>(`${this.apiBase}/group`).subscribe({
       next: (data) => {
         this.groups.set(data);
@@ -92,19 +92,23 @@ export class SidebarComponent implements OnInit {
 
   toggleGroup(groupId: number) {
     const expanded = new Set(this.expandedGroups());
+
     if (expanded.has(groupId)) {
       expanded.delete(groupId);
     } else {
       expanded.add(groupId);
+
       if (!this.groupClients().has(groupId)) {
         this.loadGroupClients(groupId);
       }
     }
+
     this.expandedGroups.set(expanded);
   }
 
   loadGroupClients(groupId: number) {
     this.loadingGroupId.set(groupId);
+
     this.http.get<GroupDetailsDto>(`${this.apiBase}/group/${groupId}`).subscribe({
       next: (data) => {
         const map = new Map(this.groupClients());
@@ -127,7 +131,7 @@ export class SidebarComponent implements OnInit {
     return this.groupClients().get(groupId) ?? [];
   }
 
-  // ── Hierarchy : construit depuis businesses + branches + clients ──────────
+  // ───────── HIERARCHY ─────────
   loadHierarchy() {
     this.loadingHierarchy.set(true);
 
@@ -137,17 +141,19 @@ export class SidebarComponent implements OnInit {
       clients:    this.http.get<any[]>(`${this.apiBase}/atm/clients`)
     }).subscribe({
       next: ({ businesses, branches, clients }) => {
+
         const tree: BusinessNode[] = businesses.map(biz => ({
-          businessId:   biz.businessId,
+          businessId: biz.businessId,
           businessName: biz.businessName,
           branches: branches
             .filter(br => br.businessId === biz.businessId)
             .map(br => ({
-              branchId:   br.branchId,
+              branchId: br.branchId,
               branchName: br.branchName,
               clients: clients.filter(c => c.branchId === br.branchId)
             }))
         }));
+
         this.businesses.set(tree);
         this.loadingHierarchy.set(false);
       },
@@ -170,6 +176,11 @@ export class SidebarComponent implements OnInit {
     this.expandedBranches.set(s);
   }
 
-  isBusinessExpanded(id: number) { return this.expandedBusinesses().has(id); }
-  isBranchExpanded(id: number)   { return this.expandedBranches().has(id); }
+  isBusinessExpanded(id: number) {
+    return this.expandedBusinesses().has(id);
+  }
+
+  isBranchExpanded(id: number) {
+    return this.expandedBranches().has(id);
+  }
 }

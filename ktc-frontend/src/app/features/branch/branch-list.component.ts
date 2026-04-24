@@ -33,13 +33,13 @@ export class BranchListComponent implements OnInit {
       .filter(b => {
         return !q ||
           b.branchName.toLowerCase().includes(q) ||
-          b.displayId.toLowerCase().includes(q) ||
+          (b.displayId || '').toLowerCase().includes(q) ||
           String(b.branchId).includes(q) ||
           String(b.businessId).includes(q);
       })
       .sort((a, b) => {
-        const va = a[field] ?? '';
-        const vb = b[field] ?? '';
+        const va = (a[field] ?? '').toString().toLowerCase();
+        const vb = (b[field] ?? '').toString().toLowerCase();
         const cmp = va < vb ? -1 : va > vb ? 1 : 0;
         return asc ? cmp : -cmp;
       });
@@ -55,13 +55,14 @@ export class BranchListComponent implements OnInit {
   load(): void {
     this.isLoading.set(true);
     this.error.set(null);
+
     this.atmService.getBranches().subscribe({
       next: data => {
         this.branches.set(data);
         this.isLoading.set(false);
       },
       error: err => {
-        this.error.set(err?.error?.message ?? 'Impossible de charger les branches');
+        this.error.set(err?.error?.message || 'Impossible de charger les branches');
         this.isLoading.set(false);
       }
     });
@@ -78,9 +79,16 @@ export class BranchListComponent implements OnInit {
 
   confirmDelete(branch: BranchDto): void {
     if (!confirm(`Supprimer la branche "${branch.branchName}" (#${branch.branchId}) ?`)) return;
+
     this.atmService.deleteBranch(branch.branchId).subscribe({
-      next: () => this.branches.update(list => list.filter(b => b.branchId !== branch.branchId)),
-      error: err => alert(err?.error?.message ?? 'Erreur lors de la suppression')
+      next: () => {
+        this.branches.update(list =>
+          list.filter(b => b.branchId !== branch.branchId)
+        );
+      },
+      error: err => {
+        alert(err?.error?.message || 'Erreur lors de la suppression');
+      }
     });
   }
 

@@ -84,12 +84,12 @@
               <span class="business-badge">{{ branch.businessId }}</span>
             </td>
 
-            <td class="col-info">
-              <span *ngIf="branch.additionalInfo" class="info-text" [title]="branch.additionalInfo ?? ''">
-                {{ branch.additionalInfo | slice:0:60 }}{{ (branch.additionalInfo?.length ?? 0) > 60 ? '…' : '' }}
-              </span>
-              <span *ngIf="!branch.additionalInfo" class="muted">—</span>
-            </td>
+<td class="col-info">
+  <span *ngIf="branch.additionalInfo" class="info-text" [title]="branch.additionalInfo">
+    {{ branch.additionalInfo | slice:0:60 }}{{ branch.additionalInfo.length > 60 ? '…' : '' }}
+  </span>
+  <span *ngIf="!branch.additionalInfo" class="muted">—</span>
+</td>
 
             <td class="col-actions">
               <button class="icon-btn icon-btn--edit" title="Modifier" (click)="goEdit(branch.branchId)">✏️</button>
